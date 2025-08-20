@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Live Chat App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: url('./bg.jpg');
+            margin: 0;
+            padding: 0;
+        }
+
+        #chat {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        #messages {
+            list-style: none;
+            padding: 0;
+            height: 400px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+        }
+
+        /* Common message style */
+        .message {
+            max-width: 70%;
+            margin: 5px;
+            padding: 10px 15px;
+            border-radius: 15px;
+            display: inline-block;
+            word-wrap: break-word;
+        }
+
+        /* Left side (other users) */
+        .left {
+            background: #f1f0f0;
+            text-align: left;
+            float: left;
+            clear: both;
+        }
+
+        /* Right side (your messages) */
+        .right {
+            background: #dcf8c6;
+            text-align: right;
+            float: right;
+            clear: both;
+        }
+
+        /* System messages */
+        .system {
+            text-align: center;
+            background: #eee;
+            display: block;
+            margin: 10px auto;
+            border-radius: 10px;
+            color: #555;
+            font-size: 14px;
+        }
+
+        #form {
+            display: flex;
+        }
+
+        #input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin-left: 10px;
+            border: none;
+            background: #128c7e;
+            color: white;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #075e54;
+        }
+
+        .headimg {
+            width: 100px;
+        }
+
+        .head {
+            gap: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="chat">
+        <div class="head">
+            <img class="headimg" src="./raj.jpg" alt="">
+            <h2 style="text-align:center; color:#075e54;">Live Chat</h2>
+        </div>
+        <ul id="messages"></ul>
+        <form id="form">
+            <input id="input" autocomplete="off" placeholder="Type your message..." />
+            <button>Send</button>
+        </form>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+
+        // Username prompt
+        let username = prompt("Enter your name:");
+        if (!username) username = "Anonymous";
+        socket.emit("join", username);
+
+        const form = document.getElementById("form");
+        const input = document.getElementById("input");
+        const messages = document.getElementById("messages");
+
+        form.addEventListener("submit", function (e) {
+            e.preventDefault();
+            if (input.value) {
+                socket.emit("chat message", input.value);
+                input.value = "";
+            }
+        });
+
+        socket.on("chat message", function (data) {
+            const item = document.createElement("li");
+            // const time = data.time ? new Date(data.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "";
+            let now = new Date();
+            time = now.toLocaleTimeString();
+            // console.log(now.toLocaleTimeString());  // 10:45:12 PM
+            // console.log(now.toLocaleDateString());  // 8/19/2025
+
+            if (data.user === "System") {
+                item.textContent = `${data.msg}`;
+                item.className = "message system";
+            } else if (data.user === username) {
+                item.textContent = `${data.msg}  (${time})`;
+                item.className = "message right";
+            } else {
+                item.textContent = `${data.user}: ${data.msg}  (${time})`;
+                item.className = "message left";
+            }
+
+            messages.appendChild(item);
+            messages.scrollTop = messages.scrollHeight;
+        });
+
+    </script>
+</body>
+
+</html>
